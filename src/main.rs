@@ -4,7 +4,6 @@ use std::panic::set_hook;
 use async_minecraft_ping::ConnectionConfig;
 use colored::*;
 use futures::future::join_all;
-use futures::{Future, FutureExt};
 use http::Uri;
 
 #[tokio::main]
