@@ -46,15 +46,22 @@ async fn main() {
     let connections = join_all(config_futures).await;
 
     for connection_result in connections {
-        let mut connection = connection_result.expect("Failed to connect to server!");
+        let connection = connection_result.expect("Failed to connect to server!");
+
+        // We need to make the address/port text before we get the status
+        // because otherwise the borrow checker starts complaining
+        let address = connection.get_address();
+        let port = connection.get_port();
+        let formatted_address_port = format!("{}:{}", address, port).bold();
+
         let status_result = connection.status().await;
 
         match status_result {
             Ok(status) => println!(
                 "{: <40} | {: <10} | {: <10}",
-                format!("{}:{}", connection.address, connection.port).bold(),
-                format!("{} online", status.players.online),
-                format!("{} max", status.players.max)
+                formatted_address_port,
+                format!("{} online", status.status.players.online),
+                format!("{} max", status.status.players.max)
             ),
             Err(_) => panic!("Failed to get server status!"),
         }
