@@ -4,6 +4,7 @@ use std::panic::set_hook;
 use async_minecraft_ping::ConnectionConfig;
 use colored::*;
 use futures::future::join_all;
+use futures::FutureExt;
 use http::Uri;
 
 #[tokio::main]
@@ -40,30 +41,23 @@ async fn main() {
             config = config.with_port(authority.port().unwrap().as_u16());
         }
 
-        config.connect()
+        config.connect().then(|conn| {
+            conn.expect(&format!("Failed to connect to {}", authority.host()))
+                .status()
+        })
     });
 
-    let connections = join_all(config_futures).await;
+    let pings = join_all(config_futures).await;
 
-    for connection_result in connections {
-        let connection = connection_result.expect("Failed to connect to server!");
-
-        // We need to make the address/port text before we get the status
-        // because otherwise the borrow checker starts complaining
-        let address = connection.get_address();
-        let port = connection.get_port();
-        let formatted_address_port = format!("{}:{}", address, port).bold();
-
-        let status_result = connection.status().await;
-
-        match status_result {
+    for ping_result in pings {
+        match ping_result {
             Ok(status) => println!(
                 "{: <40} | {: <10} | {: <10}",
-                formatted_address_port,
+                format!("{}:{}", status.address(), status.port()),
                 format!("{} online", status.status.players.online),
                 format!("{} max", status.status.players.max)
             ),
-            Err(_) => panic!("Failed to get server status!"),
+            Err(_) => panic!("Failed to get server status"),
         }
     }
 }
