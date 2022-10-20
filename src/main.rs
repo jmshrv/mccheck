@@ -50,14 +50,26 @@ async fn main() {
     let pings = join_all(config_futures).await;
 
     for ping_result in pings {
-        match ping_result {
-            Ok(status) => println!(
-                "{: <40} | {: <10} | {: <10}",
-                format!("{}:{}", status.address(), status.port()),
-                format!("{} online", status.status.players.online),
-                format!("{} max", status.status.players.max)
-            ),
-            Err(_) => panic!("Failed to get server status"),
+        if let Ok(status) = ping_result {
+            println!(
+                "{}:{}",
+                status.address().bold(),
+                status.port().to_string().bold()
+            );
+            println!(
+                "    {} online",
+                status.status.players.online.to_string().bold()
+            );
+
+            if let Some(players) = status.status.players.sample {
+                println!("    {}", "Players".bold());
+
+                for player in players {
+                    println!("      {}", player.name);
+                }
+            }
+        } else {
+            panic!("Failed to get server status")
         }
     }
 }
