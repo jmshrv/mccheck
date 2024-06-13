@@ -61,8 +61,10 @@ async fn main() {
                 status.status.players.online.to_string().bold()
             );
 
-            if let Some(players) = status.status.players.sample {
+            if let Some(mut players) = status.status.players.sample {
                 println!("    {}", "Players".bold());
+
+                players.sort_by(|a, b| a.name.cmp(&b.name));
 
                 for player in players {
                     println!("      {}", player.name);
