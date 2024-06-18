@@ -64,7 +64,7 @@ async fn main() {
             if let Some(mut players) = status.status.players.sample {
                 println!("    {}", "Players".bold());
 
-                players.sort_by(|a, b| a.name.cmp(&b.name));
+                players.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
 
                 for player in players {
                     println!("      {}", player.name);
